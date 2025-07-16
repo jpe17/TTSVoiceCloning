@@ -19,6 +19,28 @@ def get_device():
 device = get_device()
 print(f"Using device: {device}")
 
+# Global TTS instance to avoid reloading
+_tts_instance = None
+_voice_cache = {}
+
+def get_tts():
+    """Get or create TTS instance (singleton pattern)"""
+    global _tts_instance
+    if _tts_instance is None:
+        print("Initializing TTS model (this happens once)...")
+        _tts_instance = TextToSpeech(device=device)
+        print("TTS model loaded and ready!")
+    return _tts_instance
+
+def get_cached_voice(voice_name):
+    """Get cached voice or load it"""
+    if voice_name not in _voice_cache:
+        print(f"Loading voice: {voice_name}")
+        voice_samples, conditioning_latents = load_voice(voice_name)
+        _voice_cache[voice_name] = (voice_samples, conditioning_latents)
+        print(f"Voice {voice_name} cached for fast access")
+    return _voice_cache[voice_name]
+
 def play_audio(file_path):
     """Play audio file with multiple fallback methods"""
     try:
@@ -44,7 +66,7 @@ def play_audio(file_path):
 
 def speak_text(text, voice_name="elonmusk", output_file=None, play_audio=True):
     """
-    Generate speech from text using ultra-fast inference with high-quality training data
+    Generate speech from text using optimized ultra-fast inference
     
     Args:
         text: Text to convert to speech
@@ -57,21 +79,20 @@ def speak_text(text, voice_name="elonmusk", output_file=None, play_audio=True):
     """
     start = time.time()
     
-    # Initialize TTS with proper device
-    tts = TextToSpeech(device=device)
-    
     try:
-        # Load voice (this uses the high-quality training data)
-        voice_samples, conditioning_latents = load_voice(voice_name)
-        print(f"Loaded voice: {voice_name}")
+        # Get cached TTS instance
+        tts = get_tts()
+        
+        # Get cached voice
+        voice_samples, conditioning_latents = get_cached_voice(voice_name)
         
         # Generate speech with ultra-fast inference
-        print(f"Generating speech with ultra-fast inference...")
+        print(f"Generating speech...")
         gen = tts.tts_with_preset(
             text=text,
             voice_samples=voice_samples,
             conditioning_latents=conditioning_latents,
-            preset='ultra_fast'  # Almost instant but relies on quality training
+            preset='ultra_fast'
         )
         
         # Set output filename if not provided
@@ -106,8 +127,17 @@ def list_voices():
         print(f"  - {voice}")
     return voices
 
+def preload_voice(voice_name="elonmusk"):
+    """Preload a voice to make subsequent calls faster"""
+    print(f"Preloading voice: {voice_name}")
+    get_cached_voice(voice_name)
+    print(f"Voice {voice_name} ready for instant use!")
+
 # Simple usage example
 if __name__ == "__main__":
+    # Preload the voice for faster first generation
+    preload_voice("elonmusk")
+    
     # Example usage - just call the function
-    text = "Hello, this is a test of the ultra-fast voice generation system."
+    text = "Hello, this is a test of the optimized ultra-fast voice generation system."
     speak_text(text, "elonmusk") 
