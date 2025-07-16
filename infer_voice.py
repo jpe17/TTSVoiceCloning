@@ -5,6 +5,7 @@ from tortoise.api import TextToSpeech
 from tortoise.utils.audio import load_voice, get_voices
 import time
 import sys
+import subprocess
 
 # Better device detection
 def get_device():
@@ -17,6 +18,29 @@ def get_device():
 
 device = get_device()
 print(f"Using device: {device}")
+
+def play_audio(file_path):
+    """Play audio file with multiple fallback methods"""
+    try:
+        if sys.platform == "darwin":  # macOS
+            subprocess.run(["afplay", file_path], check=True)
+        elif sys.platform.startswith("linux"):  # Linux
+            # Try multiple audio players
+            players = ["aplay", "paplay", "mpg123", "ffplay"]
+            for player in players:
+                try:
+                    subprocess.run([player, file_path], check=True)
+                    return
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    continue
+            print(f"Audio saved to {file_path}. Please play it manually.")
+        elif sys.platform == "win32":  # Windows
+            os.system(f"start {file_path}")
+        else:
+            print(f"Audio saved to {file_path}. Please play it manually.")
+    except Exception as e:
+        print(f"Could not play audio automatically: {e}")
+        print(f"Audio saved to {file_path}. Please play it manually.")
 
 def speak_text(text, voice_name="elonmusk", output_file=None, play_audio=True):
     """
@@ -66,14 +90,7 @@ def speak_text(text, voice_name="elonmusk", output_file=None, play_audio=True):
         
         # Play audio if requested
         if play_audio:
-            if sys.platform == "darwin":  # macOS
-                os.system(f"afplay {output_file}")
-            elif sys.platform.startswith("linux"):  # Linux
-                os.system(f"aplay {output_file}")
-            elif sys.platform == "win32":  # Windows
-                os.system(f"start {output_file}")
-            else:
-                print(f"Audio saved to {output_file}. Please play it manually.")
+            play_audio(output_file)
         
         return output_file
         
