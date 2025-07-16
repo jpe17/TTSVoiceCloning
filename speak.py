@@ -1,7 +1,5 @@
-from infer_voice import speak_text, preload_voice
+# Optimized for single-use generation
+from infer_voice import speak_text
 
-# Preload everything upfront
-preload_voice("elonmusk")
-
-# Now all generations are instant
-speak_text("Hello, my name is Bes")
+# Generate and play audio with optimized single-use generation
+speak_text("Hello, this is Elon Musk speaking through AI.")
