@@ -20,9 +20,9 @@ def list_available_voices():
         print(f"  - {voice}")
     return voices
 
-def speak(text, voice_name, output_file=None, play_audio=True, preset='fast'):
+def speak(text, voice_name, output_file=None, play_audio=True, preset='high_quality'):
     """
-    Generate speech using a specific voice
+    Generate speech using a specific voice with high quality settings
     
     Args:
         text: Text to convert to speech
@@ -41,8 +41,8 @@ def speak(text, voice_name, output_file=None, play_audio=True, preset='fast'):
         voice_samples, conditioning_latents = load_voice(voice_name)
         print(f"Loaded voice: {voice_name}")
         
-        # Generate speech
-        print(f"Generating speech with preset: {preset}")
+        # Generate speech with high quality
+        print(f"Generating high-quality speech with preset: {preset}")
         gen = tts.tts_with_preset(
             text=text,
             voice_samples=voice_samples,
@@ -52,12 +52,18 @@ def speak(text, voice_name, output_file=None, play_audio=True, preset='fast'):
         
         # Set output filename if not provided
         if output_file is None:
-            output_file = f"{voice_name}_output.wav"
+            output_file = f"{voice_name}_high_quality_output.wav"
         
-        # Save audio
-        torchaudio.save(output_file, gen.squeeze(0).cpu(), 24000)
+        # Save audio with high quality settings
+        torchaudio.save(
+            output_file, 
+            gen.squeeze(0).cpu(), 
+            24000,
+            encoding="PCM_S",
+            bits_per_sample=16
+        )
         generation_time = time.time() - start
-        print(f"Generated in {generation_time:.2f}s")
+        print(f"Generated high-quality audio in {generation_time:.2f}s")
         print(f"Audio saved to: {output_file}")
         
         # Play audio if requested
@@ -90,13 +96,13 @@ def read_text_from_file(file_path):
         return None
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate speech using Tortoise TTS")
+    parser = argparse.ArgumentParser(description="Generate high-quality speech using Tortoise TTS")
     parser.add_argument("text", nargs='?', help="Text to convert to speech (or file path ending in .txt)")
     parser.add_argument("--voice", "-v", default="elonmusk", help="Voice to use for generation")
     parser.add_argument("--output", "-o", help="Output file path")
-    parser.add_argument("--preset", "-p", default="fast", 
+    parser.add_argument("--preset", "-p", default="high_quality", 
                        choices=["ultra_fast", "fast", "standard", "high_quality"],
-                       help="Generation preset")
+                       help="Generation preset (default: high_quality)")
     parser.add_argument("--no-play", action="store_true", help="Don't play audio after generation")
     parser.add_argument("--list-voices", "-l", action="store_true", help="List available voices")
     
@@ -128,9 +134,9 @@ def main():
         if text is None:
             return
     
-    print(f"Generating speech for: '{text}'")
+    print(f"Generating high-quality speech for: '{text}'")
     print(f"Using voice: {args.voice}")
-    print(f"Preset: {args.preset}")
+    print(f"Quality preset: {args.preset}")
     
     # Generate speech
     output_file = speak(
@@ -142,7 +148,7 @@ def main():
     )
     
     if output_file:
-        print(f"Success! Audio saved to: {output_file}")
+        print(f"Success! High-quality audio saved to: {output_file}")
 
 if __name__ == "__main__":
     main() 
